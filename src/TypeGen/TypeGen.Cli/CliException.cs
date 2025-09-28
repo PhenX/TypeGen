@@ -16,11 +16,6 @@ namespace TypeGen.Cli
         {
         }
 
-        public CliException(SerializationInfo info, StreamingContext context)
-            : base(info, context)
-        {
-        }
-
         public CliException(string message)
             : base(message)
         {

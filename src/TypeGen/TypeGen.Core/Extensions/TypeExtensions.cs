@@ -60,7 +60,6 @@ namespace TypeGen.Core.Extensions
         /// <summary>
         /// Filters members for TypeScript export
         /// </summary>
-        /// <typeparam name="T"></typeparam>
         /// <param name="memberInfos"></param>
         /// <returns></returns>
         public static IEnumerable<FieldInfo> WithMembersFilter(this IEnumerable<FieldInfo> memberInfos)
@@ -72,7 +71,6 @@ namespace TypeGen.Core.Extensions
         /// <summary>
         /// Filters members for TypeScript export
         /// </summary>
-        /// <typeparam name="T"></typeparam>
         /// <param name="memberInfos"></param>
         /// <returns></returns>
         public static IEnumerable<PropertyInfo> WithMembersFilter(this IEnumerable<PropertyInfo> memberInfos)

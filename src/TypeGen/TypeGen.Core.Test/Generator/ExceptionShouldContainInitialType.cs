@@ -40,6 +40,6 @@ public class ExceptionShouldContainInitialType
     
     private class TestExceptions
     {
-        public List<Guid?>? InvalidCollection { get; set; }
+        public List<Guid?> InvalidCollection { get; set; }
     }
 }

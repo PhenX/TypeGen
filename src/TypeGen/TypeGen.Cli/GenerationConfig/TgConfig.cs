@@ -18,8 +18,6 @@ namespace TypeGen.Cli.GenerationConfig
         public static string[] DefaultTypeBlacklist => Array.Empty<string>();
         public static string[] DefaultTypeWhitelist => Array.Empty<string>();
 
-        [Obsolete("Use Assemblies instead")]
-        public string AssemblyPath { get; set; }
         public string[] Assemblies { get; set; }
         public string[] GenerationSpecs { get; set; }
         public string[] FileNameConverters { get; set; }
@@ -106,9 +104,7 @@ namespace TypeGen.Cli.GenerationConfig
 
         public string[] GetAssemblies()
         {
-            return Assemblies.IsNullOrEmpty() && !string.IsNullOrWhiteSpace(AssemblyPath) ?
-                new[] { AssemblyPath } :
-                Assemblies;
+            return Assemblies;
         }
     }
 }

@@ -8,6 +8,6 @@ internal interface IMemberGenericTrait<TType, TSpecBuilder>
     /// Sets the currently configured member using a lambda (for shorter notation).
     /// </summary>
     /// <param name="memberNameFunc">The lambda mapping a type instance to member name.</param>
-    /// <returns>The current instance of <see cref="TSpecBuilder"/>.</returns>
+    /// <returns>The current instance of <typeparamref name="TSpecBuilder"/>.</returns>
     TSpecBuilder Member(Func<TType, string> memberNameFunc);
 }

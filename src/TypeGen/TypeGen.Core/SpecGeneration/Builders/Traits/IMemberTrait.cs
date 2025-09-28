@@ -6,6 +6,6 @@ internal interface IMemberTrait<TSpecBuilder>
     /// Sets the currently configured member.
     /// </summary>
     /// <param name="memberName">The member's name.</param>
-    /// <returns>The current instance of <see cref="TSpecBuilder"/>.</returns>
+    /// <returns>The current instance of <typeparamref name="TSpecBuilder"/>.</returns>
     TSpecBuilder Member(string memberName);
 }

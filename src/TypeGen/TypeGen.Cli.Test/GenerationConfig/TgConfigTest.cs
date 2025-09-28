@@ -40,24 +40,5 @@ namespace TypeGen.Cli.Test.GenerationConfig
             tgConfig.TypeBlacklist.Should().BeEmpty();
             tgConfig.TypeWhitelist.Should().BeEmpty();
         }
-
-        [Fact]
-        public void GetAssemblies_AssembliesIsNullOrEmpty_ReturnsAssemblyPath()
-        {
-            var tgConfig = new TgConfig { AssemblyPath = "some/path" };
-            string[] actualResult = tgConfig.GetAssemblies();
-            Assert.Equal(new[] { "some/path" }, actualResult);
-        }
-        
-        [Fact]
-        public void GetAssemblies_AssembliesIsNotNullOrEmpty_ReturnsAssemblies()
-        {
-            var assemblies = new[] { "my/assembly.dll", "other/assembly.dll" };
-            var tgConfig = new TgConfig { AssemblyPath = "some/path", Assemblies = assemblies };
-            
-            string[] actualResult = tgConfig.GetAssemblies();
-            
-            Assert.Equal(assemblies, actualResult);
-        }
     }
 }

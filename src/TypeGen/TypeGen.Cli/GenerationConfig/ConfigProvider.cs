@@ -61,12 +61,6 @@ namespace TypeGen.Cli.GenerationConfig
 
         private void UpdateConfigAssemblyPaths(TgConfig config, string projectFolder)
         {
-            if (!string.IsNullOrEmpty(config.AssemblyPath))
-            {
-                config.AssemblyPath = GetAssemblyPathRelativeToCwd(config.AssemblyPath, projectFolder, config.ProjectOutputFolder);
-                _logger.Log("The 'assemblyPath' config parameter is deprecated and can be removed in future versions. Please use 'assemblies' instead.", LogLevel.Warning);
-            }
-
             config.Assemblies = config.Assemblies.Select(a => GetAssemblyPathRelativeToCwd(a, projectFolder, config.ProjectOutputFolder)).ToArray();
 
             if (!config.Assemblies.Any())

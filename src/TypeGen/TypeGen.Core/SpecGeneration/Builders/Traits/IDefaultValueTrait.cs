@@ -6,6 +6,6 @@ internal interface IDefaultValueTrait<TSpecBuilder>
     /// Specifies the default value for the selected member (equivalent of TsDefaultValueAttribute).
     /// </summary>
     /// <param name="defaultValue">The default value.</param>
-    /// <returns>The current instance of <see cref="TSpecBuilder"/>.</returns>
+    /// <returns>The current instance of <typeparamref name="TSpecBuilder"/>.</returns>
     TSpecBuilder DefaultValue(string defaultValue);
 }

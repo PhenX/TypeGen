@@ -15,7 +15,7 @@ internal interface ICustomBaseTrait<TSpecBuilder>
     /// This property should only be used in conjunction with importPath.</param>
     /// <param name="isDefaultExport">Whether default export is used for the referenced TypeScript type - used only in combination with importPath.</param>
     /// <param name="implementedInterfaces">The implemented interfaces.</param>
-    /// <returns>The current instance of <see cref="TSpecBuilder"/>.</returns>
+    /// <returns>The current instance of <typeparamref name="TSpecBuilder"/>.</returns>
     TSpecBuilder CustomBase(string @base = null, string importPath = null, string originalTypeName = null, bool isDefaultExport = false,
         IEnumerable<ImplementedInterface> implementedInterfaces = null);
 
@@ -29,7 +29,7 @@ internal interface ICustomBaseTrait<TSpecBuilder>
     /// This property should only be used in conjunction with importPath.</param>
     /// <param name="isDefaultExport">Whether default export is used for the referenced TypeScript type - used only in combination with importPath.</param>
     /// <param name="implementedInterfaces">The implemented interfaces.</param>
-    /// <returns>The current instance of <see cref="TSpecBuilder"/>.</returns>
+    /// <returns>The current instance of <typeparamref name="TSpecBuilder"/>.</returns>
     TSpecBuilder CustomBase(string @base = null, string importPath = null, string originalTypeName = null, bool isDefaultExport = false,
         params ImplementedInterface[] implementedInterfaces);
 }

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.RegularExpressions;
 using TypeGen.Core.Conversion;
 using TypeGen.Core.Storage;
 
@@ -46,20 +45,25 @@ internal class XmlDocs
 
     private string GetForXmlDocMember(string assemblyName, string xmlDocMemberType, string typeFullName, string memberName = null)
     {
-        if (!_assemblyToXmlDocMapping.ContainsKey(assemblyName))
+        if (!_assemblyToXmlDocMapping.TryGetValue(assemblyName, out var xmlDoc))
             throw new InvalidOperationException($"Assembly '{assemblyName}' has not been previously added.");
-        
-        var xmlDoc = _assemblyToXmlDocMapping[assemblyName];
+
         if (xmlDoc == null) return null;
         
-        var typeFullNameForRegex = typeFullName.Replace(".", "\\.");
-        var memberNameForRegex = memberName != null ? "\\." + memberName : null;
+        var memberNamePart = memberName != null ? "." + memberName : string.Empty;
+        var memberPath = $"{xmlDocMemberType}:{typeFullName}{memberNamePart}";
+        var startTag = $"<member name=\"{memberPath}\">";
         
-        var regex = new Regex($"""<member name="{xmlDocMemberType}:{typeFullNameForRegex}{memberNameForRegex}\">(.*?)<\/member>""",
-            RegexOptions.Singleline);
-        var match = regex.Match(xmlDoc);
+        var startIndex = xmlDoc.IndexOf(startTag, StringComparison.Ordinal);
+        if (startIndex == -1) return null;
         
-        return match.Success ? match.Groups[1].Value.Trim() : null;
+        var contentStart = startIndex + startTag.Length;
+        var endTag = "</member>";
+        var endIndex = xmlDoc.IndexOf(endTag, contentStart, StringComparison.Ordinal);
+        
+        if (endIndex == -1) return null;
+        
+        return xmlDoc.AsSpan(contentStart, endIndex - contentStart).Trim().ToString();
     }
 
     public bool Contains(string assemblyName) => _assemblyToXmlDocMapping.ContainsKey(assemblyName);

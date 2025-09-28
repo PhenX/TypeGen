@@ -16,7 +16,7 @@ namespace TypeGen.FileContentTest.CustomMappingsClassGeneration
         {
             var type = typeof(ClassWithUri);
             var expectedLocation = @"TypeGen.FileContentTest.CustomMappingsClassGeneration.Expected.class-with-uri.ts";
-            var spec = new TestGenerationSpec();
+            var spec = new TestGenerationSpecClass();
             var generatorOptions = new GeneratorOptions
             {
                 CustomTypeMappings = new Dictionary<string, string>
@@ -31,7 +31,7 @@ namespace TypeGen.FileContentTest.CustomMappingsClassGeneration
         [Fact]
         public async Task ShouldNotGenerateDependencyIfItsInCustomTypeMappings()
         {
-            var spec = new TestGenerationSpec();
+            var spec = new TestGenerationSpecClass();
             var generator = Generator.Get(
                 new GeneratorOptions
                 {
@@ -47,9 +47,9 @@ namespace TypeGen.FileContentTest.CustomMappingsClassGeneration
             Assert.False(interceptor.GeneratedOutputs.ContainsKey(typeof(Uri)));
         }
 
-        private class TestGenerationSpec : GenerationSpec
+        private class TestGenerationSpecClass : GenerationSpec
         {
-            public TestGenerationSpec()
+            public TestGenerationSpecClass()
             {
                 AddClass<ClassWithUri>();
             }

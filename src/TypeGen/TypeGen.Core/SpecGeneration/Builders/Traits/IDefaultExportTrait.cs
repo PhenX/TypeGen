@@ -6,6 +6,6 @@ internal interface IDefaultExportTrait<TSpecBuilder>
     /// Indicates whether to use default export for the generated TypeScript type (equivalent of TsDefaultExportAttribute).
     /// </summary>
     /// <param name="enabled">Whether to enable default export.</param>
-    /// <returns>The current instance of <see cref="TSpecBuilder"/>.</returns>
+    /// <returns>The current instance of <typeparamref name="TSpecBuilder"/>.</returns>
     TSpecBuilder DefaultExport(bool enabled = true);
 }

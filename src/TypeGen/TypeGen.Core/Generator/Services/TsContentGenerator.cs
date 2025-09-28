@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -358,6 +359,12 @@ namespace TypeGen.Core.Generator.Services
                         return $@"new Date({quote}{valueDateTimeOffset.ToString("o", CultureInfo.InvariantCulture)}{quote})";
                     case DateTimeOffset valueDateTimeOffset when memberType == "string":
                         return quote + valueDateTimeOffset.ToString("o", CultureInfo.InvariantCulture) + quote;
+                    case "":
+                        return quote + quote;
+                    case IDictionary { Count: 0 }:
+                        return "{}";
+                    case ICollection { Count: 0 }:
+                        return "[]";
                     default:
                         return JsonConvert.SerializeObject(valueObj, _jsonSerializerSettings).Replace("\"", quote);
                 }

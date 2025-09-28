@@ -5,6 +5,6 @@ internal interface ICustomHeaderTrait<TSpecBuilder>
     /// <summary>
     /// Indicates type has a custom header (equivalent of TsExportAttribute's CustomHeader).
     /// </summary>
-    /// <returns>The current instance of <see cref="TSpecBuilder"/>.</returns>
+    /// <returns>The current instance of <typeparamref name="TSpecBuilder"/>.</returns>
     TSpecBuilder CustomHeader(string header);
 }
