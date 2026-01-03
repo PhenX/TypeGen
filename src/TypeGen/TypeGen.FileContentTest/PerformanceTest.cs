@@ -25,7 +25,7 @@ public class PerformanceTest
     {
         // arrange
         var assembly = GetType().Assembly;
-        var generator = new Generator();
+        var generator = Generator.Get();
         var interceptor = GeneratorOutputInterceptor.CreateInterceptor(generator);
         var sw = new Stopwatch();
 

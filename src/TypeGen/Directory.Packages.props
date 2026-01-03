@@ -4,9 +4,10 @@
     <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
     <CentralPackageFloatingVersionsEnabled>true</CentralPackageFloatingVersionsEnabled>
     
-    <MicrosoftPackackagesVersion>9.*</MicrosoftPackackagesVersion>
+    <MicrosoftPackackagesVersion>10.*</MicrosoftPackackagesVersion>
     <MicrosoftPackackagesVersion Condition="'$(TargetFramework)' == 'net8.0'">8.*</MicrosoftPackackagesVersion>
     <MicrosoftPackackagesVersion Condition="'$(TargetFramework)' == 'net9.0'">9.*</MicrosoftPackackagesVersion>
+    <MicrosoftPackackagesVersion Condition="'$(TargetFramework)' == 'net10.0'">10.*</MicrosoftPackackagesVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="$(MicrosoftPackackagesVersion)" />
@@ -22,11 +23,11 @@
     <PackageVersion Include="FluentAssertions" Version="8.2.0" />
     <PackageVersion Include="LiteDB" Version="5.0.21" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
-    <PackageVersion Include="Namotion.Reflection" Version="3.3.0" />
+    <PackageVersion Include="Namotion.Reflection" Version="3.4.3" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageVersion Include="NSubstitute" Version="5.3.0" />
-    <PackageVersion Include="NuGet.Configuration" Version="6.13.2" />
-    <PackageVersion Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
+    <PackageVersion Include="NuGet.Configuration" Version="6.14.0" />
+    <PackageVersion Include="System.CommandLine" Version="2.0.1" />
     <PackageVersion Include="xunit" Version="2.9.3" />
     <PackageVersion Include="Xunit.Microsoft.DependencyInjection" Version="8.0.12" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.0.2">

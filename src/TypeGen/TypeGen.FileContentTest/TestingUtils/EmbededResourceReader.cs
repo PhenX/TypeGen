@@ -16,7 +16,7 @@ namespace TypeGen.FileContentTest.TestingUtils
                 throw new CoreException($"Could not find embedded resource '{name}'");
 
             var contentBytes = new byte[stream.Length];
-            await stream.ReadAsync(contentBytes.AsMemory(0, (int)stream.Length));
+            await stream.ReadExactlyAsync(contentBytes.AsMemory(0, (int)stream.Length));
             return Encoding.UTF8.GetString(contentBytes);
         }
     }
