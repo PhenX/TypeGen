@@ -32,9 +32,14 @@ namespace TypeGen.Cli.GenerationConfig
         {
             Requires.NotNullOrEmpty(projectFolder, nameof(projectFolder));
             
+            var isConfigPathProvided = !string.IsNullOrEmpty(configPath);
+
             configPath = !string.IsNullOrEmpty(configPath)
                 ? configPath.RelativeOrRooted(projectFolder)
                 : "tgconfig.json".RelativeOrRooted(projectFolder);
+
+            if (isConfigPathProvided && !_fileSystem.FileExists(configPath))
+                throw new CliException($"The config file path does not exist: '{configPath}'.");
 
             _logger.Log(_fileSystem.FileExists(configPath)
                 ? $"Reading the config file from \"{configPath}\""

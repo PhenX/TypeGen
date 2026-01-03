@@ -1,91 +1,162 @@
-if ($args.Length -eq 0)
-{
-  Write-Host "examples:
-./update-version 2.4.9 # changes the current version to 2.4.9"
-  exit
+param(
+    [Parameter(Mandatory = $true)]
+    [string]$Version
+)
+
+function Abort([string]$msg) {
+    Write-Error $msg
+    exit 1
 }
 
-$versionRegex = "^\d+\.\d+\.\d+$"
-$newVersion = $args[0]
-
-if (-not ($newVersion -match $versionRegex)) {
-  Write-Host "Wrong version format. Should be: $($versionRegex)"
-  exit
+if ($Version -notmatch '^\d+\.\d+\.\d+$') {
+    Abort "Version must be major.minor.build (example: 6.0.4). You passed '$Version'."
 }
 
-$oldVersion = (Select-Xml //version "nuget\TypeGen.nuspec")[0].Node.InnerText
-$oldVersionMajor = $oldVersion.Split(".")[0]
-$oldVersionMinor = $oldVersion.Split(".")[1]
+$InformationalVersion = $Version
+$AssemblyVersion      = "$Version.0"
 
-$newVersionMajor = $newVersion.Split(".")[0]
-$newVersionMinor = $newVersion.Split(".")[1]
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 
-$assemblyOldVersion = "$($oldVersionMajor).$($oldVersionMinor).0.0"
-$assemblyNewVersion = "$($newVersionMajor).$($newVersionMinor).0.0"
+$RelativeFiles = @(
+    "nuget\TypeGen.nuspec",
+    "nuget-dotnetcli\dotnet-typegen.nuspec",
+    "src\TypeGen\TypeGen.Cli\AssemblyInfo.cs",
+    "src\TypeGen\TypeGen.Core\AssemblyInfo.cs"
+)
 
-# replace files' contents
-
-$nuspecPath = "nuget\TypeGen.nuspec" 
-if (Test-Path $nuspecPath) {
-  (Get-Content $nuspecPath) `
-      -Replace "<version>$($oldVersion)</version>", "<version>$($newVersion)</version>" `
-	  | Set-Content $nuspecPath
+# Resolve absolute paths
+$Files = foreach ($rel in $RelativeFiles) {
+    if ([System.IO.Path]::IsPathRooted($rel)) {
+        if (Test-Path $rel) { (Resolve-Path $rel).Path }
+    } else {
+        $abs = Join-Path $ScriptDir $rel
+        if (Test-Path $abs) { (Resolve-Path $abs).Path }
+    }
 }
 
-$dotNetCliNuspecPath = "nuget-dotnetcli\dotnet-typegen.nuspec"
-if (Test-Path $dotNetCliNuspecPath) {
-  (Get-Content $dotNetCliNuspecPath) `
-      -Replace "<version>$($oldVersion)</version>", "<version>$($newVersion)</version>" `
-	  | Set-Content $dotNetCliNuspecPath
+function Backup-File($Path) {
+    $stamp = (Get-Date).ToString("yyyyMMddHHmmss")
+    $bak = "$Path.$stamp.bak"
+    Copy-Item -Path $Path -Destination $bak -Force
+    Write-Host "Backup created: $bak"
 }
 
-$appConfigPath = "src\TypeGen\TypeGen.Cli\ApplicationConfig.cs"
-if (Test-Path $appConfigPath) {
-  (Get-Content $appConfigPath) `
-      -Replace "Version => ""$($oldVersion)""", "Version => ""$($newVersion)""" `
-	  | Set-Content $appConfigPath
+function Update-Nuspec($Path, $NewVersion) {
+    if (-not (Test-Path $Path)) {
+        Write-Host "WARN: nuspec not found, skipping: $Path"
+        return
+    }
+
+    try {
+        # Read raw bytes and decode using BOM-aware reader
+        $bytes = [System.IO.File]::ReadAllBytes($Path)
+        # Let .NET detect BOM by using StreamReader with detectEncodingFromByteOrderMarks = $true
+        $ms = New-Object System.IO.MemoryStream(,$bytes)
+        $sr = New-Object System.IO.StreamReader($ms, $true)
+        $raw = $sr.ReadToEnd()
+        $sr.Close()
+        $ms.Close()
+
+        # Trim leading whitespace and any garbage before first '<'
+        $firstLt = $raw.IndexOf('<')
+        if ($firstLt -gt 0) {
+            $raw = $raw.Substring($firstLt)
+        }
+
+        # Remove leading BOM char if present (U+FEFF)
+        if ($raw.Length -gt 0 -and $raw[0] -eq [char]0xFEFF) {
+            $raw = $raw.Substring(1)
+        }
+
+        # Load cleaned XML string into XmlDocument
+        $xml = New-Object System.Xml.XmlDocument
+        $xml.PreserveWhitespace = $true
+        $xml.LoadXml($raw)
+
+        # Namespace support
+        $ns = New-Object System.Xml.XmlNamespaceManager($xml.NameTable)
+        if ($xml.DocumentElement -and $xml.DocumentElement.NamespaceURI) {
+            $ns.AddNamespace("d", $xml.DocumentElement.NamespaceURI)
+        }
+
+        # Find <version>
+        $node = $xml.SelectSingleNode("/package/metadata/version", $ns)
+        if ($node -eq $null -and $ns.HasNamespace("d")) {
+            $node = $xml.SelectSingleNode("/d:package/d:metadata/d:version", $ns)
+        }
+        if ($node -eq $null) { $node = $xml.SelectSingleNode("//metadata/version", $ns) }
+        if ($node -eq $null) { $node = $xml.SelectSingleNode("//version", $ns) }
+
+        if ($node -eq $null) {
+            Write-Warning "No <version> element found in $Path; skipping."
+            return
+        }
+
+        $old = $node.InnerText
+        $node.InnerText = $NewVersion
+
+        # Write formatted XML (UTF8 without BOM)
+        $settings = New-Object System.Xml.XmlWriterSettings
+        $settings.Indent = $true
+        $settings.IndentChars = "  "
+        $settings.NewLineChars = "`r`n"
+        $settings.NewLineHandling = "Replace"
+        $settings.OmitXmlDeclaration = $false
+        $settings.Encoding = New-Object System.Text.UTF8Encoding($false)
+
+        $writer = [System.Xml.XmlWriter]::Create($Path, $settings)
+        try { $xml.Save($writer) } finally { $writer.Close() }
+
+        Write-Host "Updated nuspec: $Path (version: $old -> $NewVersion)"
+    }
+    catch {
+        Write-Error ("Failed to update nuspec {0}: {1}" -f $Path, $($_.ToString()))
+    }
 }
 
-$nugetUpdatePath = "nuget-update.ps1"
-if (Test-Path $nugetUpdatePath) {
-  (Get-Content $nugetUpdatePath) `
-      -Replace "TypeGen.$($oldVersion)", "TypeGen.$($newVersion)" `
-	  -Replace "dotnet-typegen.$($oldVersion)", "dotnet-typegen.$($newVersion)" `
-	  | Set-Content $nugetUpdatePath
+
+function Update-AssemblyInfo($Path, $AsmVer, $FileVer, $InfoVer) {
+    try {
+        $content = Get-Content -Path $Path -Raw
+        $orig = $content
+
+        $rules = @(
+            @{ P = 'AssemblyVersion';              V = $AsmVer }
+            @{ P = 'AssemblyFileVersion';          V = $FileVer }
+            @{ P = 'AssemblyInformationalVersion'; V = $InfoVer }
+        )
+
+        foreach ($r in $rules) {
+            $pattern = "(?m)^\s*\[assembly:\s*(?:System\.Reflection\.)?{0}\s*\(\s*""[^""]*""\s*\)\s*\]\s*$" -f $r.P
+            $replacement = '[assembly: {0}("{1}")]' -f $r.P, $r.V
+
+            if ($content -match $pattern) {
+                $content = [regex]::Replace($content, $pattern, $replacement)
+            } else {
+                $content = $content.TrimEnd() + "`r`n$replacement`r`n"
+            }
+        }
+
+        if ($content -ne $orig) {
+            Set-Content -Path $Path -Value $content -Encoding UTF8
+            Write-Host "Updated AssemblyInfo: $Path"
+        } else {
+            Write-Host "No changes: $Path"
+        }
+    }
+    catch {
+        Write-Error ("Failed to update AssemblyInfo {0}: {1}" -f $Path, $_)
+    }
 }
 
-$applicationConfigPath = "src\TypeGen\TypeGen.Cli\ApplicationConfig.cs"
-if (Test-Path $applicationConfigPath) {
-	(Get-Content $applicationConfigPath) `
-	    -Replace "Version = ""$($oldVersion)""", "Version = ""$($newVersion)""" `
-		| Set-Content $applicationConfigPath
+# Main loop
+foreach ($file in $Files) {
+    Backup-File $file
+    switch ([System.IO.Path]::GetExtension($file).ToLowerInvariant()) {
+        ".nuspec" { Update-Nuspec $file $InformationalVersion }
+        ".cs"     { Update-AssemblyInfo $file $AssemblyVersion $AssemblyVersion $InformationalVersion }
+    }
 }
 
-$typeGenCliCsprojPath = "src\TypeGen\TypeGen.Cli\TypeGen.Cli.csproj"
-if (Test-Path $typeGenCliCsprojPath) {
-	(Get-Content $typeGenCliCsprojPath) `
-	    -Replace "<AssemblyVersion>$($assemblyOldVersion)</AssemblyVersion>", "<AssemblyVersion>$($assemblyNewVersion)</AssemblyVersion>" `
-		-Replace "<FileVersion>$($assemblyOldVersion)</FileVersion>", "<FileVersion>$($assemblyNewVersion)</FileVersion>" `
-		-Replace "<Version>$($oldVersion)</Version>", "<Version>$($newVersion)</Version>" `
-		| Set-Content $typeGenCliCsprojPath
-}
-
-$typeGenCoreCsprojPath = "src\TypeGen\TypeGen.Core\TypeGen.Core.csproj"
-if (Test-Path $typeGenCoreCsprojPath) {
-	(Get-Content $typeGenCoreCsprojPath) `
-	    -Replace "<AssemblyVersion>$($assemblyOldVersion)</AssemblyVersion>", "<AssemblyVersion>$($assemblyNewVersion)</AssemblyVersion>" `
-		-Replace "<FileVersion>$($assemblyOldVersion)</FileVersion>", "<FileVersion>$($assemblyNewVersion)</FileVersion>" `
-		| Set-Content $typeGenCoreCsprojPath
-}
-
-# remove old NuGet package
-
-$oldNupkgPath = "nuget\TypeGen.$($oldVersion).nupkg"
-if (Test-Path $oldNupkgPath) {
-  rm $oldNupkgPath
-}
-
-$oldDotNetCliNupkgPath = "nuget-dotnetcli\dotnet-typegen.$($oldVersion).nupkg"
-if (Test-Path $oldDotNetCliNupkgPath) {
-  rm $oldDotNetCliNupkgPath
-}
+Write-Host "Done. Updated to version $Version."
+exit 0

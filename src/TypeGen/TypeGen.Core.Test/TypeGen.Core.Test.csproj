@@ -1,5 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
     <IsPackable>false</IsPackable>
     <AssemblyName>TypeGen.Core.Test</AssemblyName>
     <RootNamespace>TypeGen.Core.Test</RootNamespace>
@@ -61,10 +62,5 @@
 	<None Remove="Acceptance\Expected\very\nested\directory\nested-entity.ts" />
     <None Remove="Acceptance\Expected\generic-with-restrictions.ts" />
     <None Remove="Acceptance\Expected\extended-primitives-class.ts" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="child\dir\child-enum-dir\" />
-    <Folder Include="child\dir\child2dir\" />
-    <Folder Include="child\dir\child3dir\" />
   </ItemGroup>
 </Project>

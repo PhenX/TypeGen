@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.CommandLine;
-using System.CommandLine.Builder;
 using System.CommandLine.Help;
 using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
@@ -18,8 +17,6 @@ internal class Application : IApplication
 {
     private readonly ILogger _logger;
     private readonly IPresenter _presenter;
-    
-    private ExitCode _exitCode = ExitCode.Success;
 
     public Application(ILogger logger, IPresenter presenter)
     {
@@ -29,11 +26,95 @@ internal class Application : IApplication
 
     public async Task<ExitCode> Run(string[] args)
     {
+        var rootCommand = GetRootCommand();
+        var parseResult = rootCommand.Parse(args);
+
+        if (parseResult.Errors.Count > 0)
+        {
+            foreach (var error in parseResult.Errors)
+                _logger.Log(error.Message, LogLevel.Error);
+
+            return ExitCode.Error;
+        }
+
+        return (ExitCode)await parseResult.InvokeAsync();
+    }
+
+    private RootCommand GetRootCommand()
+    {
+        var assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version;
+        var versionOutput = $"{assemblyVersion.Major}.{assemblyVersion.Minor}.{assemblyVersion.Build}";
+
+        var rootCommand = new RootCommand
+        {
+            Description = $"TypeGen {versionOutput}"
+        };
+
+        rootCommand.SetAction((ParseResult parseResult) =>
+        {
+            return rootCommand.Parse("--help").InvokeAsync();
+        });
+
+        var generateCommand = new Command("generate", "Generate TypeScript files.");
+
+        var verboseOption = new Option<bool>("--verbose", "-v")
+        {
+            Description = "Show verbose output.",
+            DefaultValueFactory = x => false
+        };
+
+        var projectFolderOption = new Option<List<string>>(name: "--project-folder", "-p")
+        {
+            Description = "The project folder path(s)."
+        };
+
+        var configPathOption = new Option<List<string>>(name: "--config-path", "-c")
+        {
+            Description = "The config file path(s)."
+        };
+
+        var outputFolderOption = new Option<string>(name: "--output-folder", "-o")
+        {
+            Description = "Project's output folder."
+        };
+        
+        generateCommand.Options.Add(verboseOption);
+        generateCommand.Options.Add(projectFolderOption);
+        generateCommand.Options.Add(configPathOption);
+        generateCommand.Options.Add(outputFolderOption);
+
+        generateCommand.SetAction(parseResult =>
+            {
+                var verbose = parseResult.GetValue(verboseOption);
+                var projectFolderPaths = parseResult.GetValue(projectFolderOption);
+                var configPaths = parseResult.GetValue(configPathOption);
+                var outputFolder = parseResult.GetValue(outputFolderOption);
+
+                var exitCode = ExecuteHandler(() => GetExitCodeFromActionResult(_presenter.Generate(verbose, projectFolderPaths, configPaths, outputFolder)));
+                return Task.FromResult((int)exitCode);
+            });
+            
+        var getCwdCommand = new Command("getcwd", "Get current working directory.");
+        getCwdCommand.SetAction(parseResult =>
+        {
+            var exitCode = ExecuteHandler(() => GetExitCodeFromActionResult(_presenter.GetCwd()));
+            return Task.FromResult((int)exitCode);
+        });
+        
+        rootCommand.Subcommands.Add(generateCommand);
+        rootCommand.Subcommands.Add(getCwdCommand);
+
+        return rootCommand;
+    }
+
+    private static ExitCode GetExitCodeFromActionResult(ActionResult actionResult) =>
+        actionResult.IsSuccess ? ExitCode.Success : ExitCode.Error;
+
+    private ExitCode ExecuteHandler(Func<ExitCode> handler)
+    {
         try
         {
-            var parser = BuildCommandLine();
-            await parser.InvokeAsync(args);
-            return _exitCode;
+            return handler();
         }
         catch (AssemblyResolutionException e)
         {
@@ -57,73 +138,4 @@ internal class Application : IApplication
             return ExitCode.Error;
         }
     }
-
-    private Parser BuildCommandLine()
-    {
-        var rootCommand = new RootCommand
-        {
-            Name = "[dotnet-]typegen"
-        };
-
-        var generateCommand = new Command("generate", "Generate TypeScript sources");
-            
-        var verboseOption = new Option<bool>
-            (name: "--verbose",
-            description: "Show verbose output",
-            getDefaultValue: () => false);
-        verboseOption.AddAlias("-v");
-
-        var projectFolderOption = new Option<List<string>>
-            (name: "--project-folder",
-            description: "The project folder path(s)");
-        projectFolderOption.AddAlias("-p");
-            
-        var configPathOption = new Option<List<string>>
-            (name: "--config-path",
-            description: "The config file path(s)");
-        configPathOption.AddAlias("-c");
-        
-        var outputFolderOption = new Option<string>
-            (name: "--output-folder",
-            description: "Project's output folder");
-        configPathOption.AddAlias("-o");
-            
-        generateCommand.AddOption(verboseOption);
-        generateCommand.AddOption(projectFolderOption);
-        generateCommand.AddOption(configPathOption);
-        generateCommand.AddOption(outputFolderOption);
-        
-        generateCommand.SetHandler((v, p, c, o) =>
-            {
-                _exitCode = ExitCodeFromActionResult(_presenter.Generate(v, p, c, o));
-            },
-            verboseOption,
-            projectFolderOption,
-            configPathOption,
-            outputFolderOption);
-            
-        var getCwdCommand = new Command("getcwd", "Get current working directory");
-        getCwdCommand.SetHandler(() =>
-        {
-            _exitCode = ExitCodeFromActionResult(_presenter.GetCwd());
-        });
-            
-        rootCommand.AddCommand(generateCommand);
-        rootCommand.AddCommand(getCwdCommand);
-
-        return new CommandLineBuilder(rootCommand)
-            .UseDefaults()
-            .UseHelp(ctx => ctx.HelpBuilder.CustomizeLayout(
-                _ => HelpBuilder.Default
-                    .GetLayout()
-                    .Skip(1)
-                    .Prepend(_ =>
-                    {
-                        Console.WriteLine($"TypeGen v{ApplicationConfig.Version}");
-                    })))
-            .Build();
-    }
-
-    private static ExitCode ExitCodeFromActionResult(ActionResult actionResult) =>
-        actionResult.IsSuccess ? ExitCode.Success : ExitCode.Error;
 }

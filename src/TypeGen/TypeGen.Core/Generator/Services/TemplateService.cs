@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Options;
+using TypeGen.Core.Extensions;
 using TypeGen.Core.Storage;
 using TypeGen.Core.Utils;
 
@@ -75,7 +76,8 @@ namespace TypeGen.Core.Generator.Services
                 .Replace(GetTag("tsDoc"), tsDoc)
                 .Replace(GetTag("customHead"), customHead)
                 .Replace(GetTag("customBody"), customBody)
-                .Replace(GetTag("fileHeading"), fileHeading);
+                .Replace(GetTag("fileHeading"), fileHeading)
+                .NormalizeNewLines();
         }
         
         public string FillClassDefaultExportTemplate(string imports, string name, string exportName, string extends, string implements,
@@ -93,7 +95,8 @@ namespace TypeGen.Core.Generator.Services
                 .Replace(GetTag("tsDoc"), tsDoc)
                 .Replace(GetTag("customHead"), customHead)
                 .Replace(GetTag("customBody"), customBody)
-                .Replace(GetTag("fileHeading"), fileHeading);
+                .Replace(GetTag("fileHeading"), fileHeading)
+                .NormalizeNewLines();
         }
 
         public string FillClassPropertyTemplate(string modifiers, string name, string type, IEnumerable<string> typeUnions,
@@ -109,7 +112,8 @@ namespace TypeGen.Core.Generator.Services
                 .Replace(GetTag("name"), name + (isOptional ? "?" : ""))
                 .Replace(GetTag("type"), type)
                 .Replace(GetTag("tsDoc"), tsDoc)
-                .Replace(GetTag("defaultValue"), defaultValue);
+                .Replace(GetTag("defaultValue"), defaultValue)
+                .NormalizeNewLines();
         }
 
         public string FillInterfaceTemplate(string imports, string name, string extends, string properties, string tsDoc,
@@ -125,7 +129,8 @@ namespace TypeGen.Core.Generator.Services
                 .Replace(GetTag("tsDoc"), tsDoc)
                 .Replace(GetTag("customHead"), customHead)
                 .Replace(GetTag("customBody"), customBody)
-                .Replace(GetTag("fileHeading"), fileHeading);
+                .Replace(GetTag("fileHeading"), fileHeading)
+                .NormalizeNewLines();
         }
         
         public string FillInterfaceDefaultExportTemplate(string imports, string name, string exportName, string extends, string properties,
@@ -142,7 +147,8 @@ namespace TypeGen.Core.Generator.Services
                 .Replace(GetTag("tsDoc"), tsDoc)
                 .Replace(GetTag("customHead"), customHead)
                 .Replace(GetTag("customBody"), customBody)
-                .Replace(GetTag("fileHeading"), fileHeading);
+                .Replace(GetTag("fileHeading"), fileHeading)
+                .NormalizeNewLines();
         }
 
         public string FillInterfacePropertyTemplate(string modifiers, string name, string type, IEnumerable<string> typeUnions, bool isOptional,
@@ -155,7 +161,8 @@ namespace TypeGen.Core.Generator.Services
                 .Replace(GetTag("modifiers"), modifiers)
                 .Replace(GetTag("name"), name + (isOptional ? "?" : ""))
                 .Replace(GetTag("type"), type)
-                .Replace(GetTag("tsDoc"), tsDoc);
+                .Replace(GetTag("tsDoc"), tsDoc)
+                .NormalizeNewLines();
         }
 
         public string FillEnumTemplate(string imports, string name, string values, bool isConst, bool asUnionType, string tsDoc,
@@ -171,7 +178,8 @@ namespace TypeGen.Core.Generator.Services
                 .Replace(GetTag("customHead"), customHead)
                 .Replace(GetTag("customBody"), customBody)
                 .Replace(GetTag("modifiers"), isConst ? "const " : "")
-                .Replace(GetTag("fileHeading"), fileHeading);
+                .Replace(GetTag("fileHeading"), fileHeading)
+                .NormalizeNewLines();
         }
         
         public string FillEnumDefaultExportTemplate(string imports, string name, string values, string tsDoc,
@@ -185,7 +193,8 @@ namespace TypeGen.Core.Generator.Services
                 .Replace(GetTag("values"), values)
                 .Replace(GetTag("tsDoc"), tsDoc)
                 .Replace(GetTag("modifiers"), isConst ? "const " : "")
-                .Replace(GetTag("fileHeading"), fileHeading);
+                .Replace(GetTag("fileHeading"), fileHeading)
+                .NormalizeNewLines();
         }
 
         public string FillEnumValueTemplate(string name, object value, string tsDoc)
@@ -196,7 +205,8 @@ namespace TypeGen.Core.Generator.Services
             return ReplaceSpecialChars(_enumValueTemplate)
                 .Replace(GetTag("name"), name)
                 .Replace(GetTag("value"), valueString)
-                .Replace(GetTag("tsDoc"), tsDoc);
+                .Replace(GetTag("tsDoc"), tsDoc)
+                .NormalizeNewLines();
         }
 
         public string FillEnumUnionTypeValueTemplate(string name)
@@ -204,7 +214,8 @@ namespace TypeGen.Core.Generator.Services
             char quote = GeneratorOptions.SingleQuotes ? '\'' : '"';
 
             return ReplaceSpecialChars(_enumUnionTypeValueTemplate)
-                .Replace(GetTag("name"), $@"{quote}{name}{quote}");
+                .Replace(GetTag("name"), $@"{quote}{name}{quote}")
+                .NormalizeNewLines();
         }
 
         public string FillImportTemplate(string name, string typeAlias, string path, bool useImportType)
@@ -215,7 +226,8 @@ namespace TypeGen.Core.Generator.Services
                 .Replace(GetTag("name"), name)
                 .Replace(GetTag("aliasText"), aliasText)
                 .Replace(GetTag("importType"), useImportType ? " type" : "")
-                .Replace(GetTag("path"), path);
+                .Replace(GetTag("path"), path)
+                .NormalizeNewLines();
         }
         
         public string FillImportDefaultExportTemplate(string name, string path, bool useImportType)
@@ -223,19 +235,22 @@ namespace TypeGen.Core.Generator.Services
             return ReplaceSpecialChars(_importDefaultExportTemplate)
                 .Replace(GetTag("name"), name)
                 .Replace(GetTag("importType"), useImportType ? " type" : "")
-                .Replace(GetTag("path"), path);
+                .Replace(GetTag("path"), path)
+                .NormalizeNewLines();
         }
 
         public string FillIndexTemplate(string exports)
         {
             return ReplaceSpecialChars(_indexTemplate)
-                .Replace(GetTag("exports"), exports);
+                .Replace(GetTag("exports"), exports)
+                .NormalizeNewLines();
         }
 
         public string FillIndexExportTemplate(string filename)
         {
             return ReplaceSpecialChars(_indexExportTemplate)
-                .Replace(GetTag("filename"), filename);
+                .Replace(GetTag("filename"), filename)
+                .NormalizeNewLines();
         }
 
         public string GetExtendsText(string name) => $" extends {name}";
